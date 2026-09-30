@@ -1,0 +1,45 @@
+{
+  "study_id": "Newcastle",
+  "design": "RCT",
+  "source_file": "fulltext/normand1999_table.md",
+  "extracted_by": "gold (metafor::dat.normand1999)",
+  "outcomes": [
+    {
+      "outcome": "length_of_stay",
+      "data_type": "continuous",
+      "unit": "days",
+      "fields": {
+        "mean_t": {
+          "value": 52,
+          "quote": "specialist care mean length of stay 52 days (SD 45, n = 34)",
+          "location": "Normand 1999, Table I"
+        },
+        "sd_t": {
+          "value": 45,
+          "quote": "specialist care mean length of stay 52 days (SD 45, n = 34)",
+          "location": "Normand 1999, Table I"
+        },
+        "n_t": {
+          "value": 34,
+          "quote": "specialist care mean length of stay 52 days (SD 45, n = 34)",
+          "location": "Normand 1999, Table I"
+        },
+        "mean_c": {
+          "value": 41,
+          "quote": "routine care mean 41 days (SD 34, n = 33)",
+          "location": "Normand 1999, Table I"
+        },
+        "sd_c": {
+          "value": 34,
+          "quote": "routine care mean 41 days (SD 34, n = 33)",
+          "location": "Normand 1999, Table I"
+        },
+        "n_c": {
+          "value": 33,
+          "quote": "routine care mean 41 days (SD 34, n = 33)",
+          "location": "Normand 1999, Table I"
+        }
+      }
+    }
+  ]
+}

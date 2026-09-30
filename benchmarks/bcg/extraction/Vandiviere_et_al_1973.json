@@ -1,0 +1,50 @@
+{
+  "study_id": "Vandiviere et al 1973",
+  "year": 1973,
+  "design": "RCT",
+  "citation": "Vandiviere et al (1973), as tabulated by Colditz et al., JAMA 1994;271:698-702",
+  "source_file": "fulltext/colditz1994_table1.md",
+  "extracted_by": "gold (metafor::dat.bcg)",
+  "outcomes": [
+    {
+      "outcome": "tb_cases",
+      "data_type": "binary",
+      "group_t": "BCG vaccinated",
+      "group_c": "not vaccinated",
+      "fields": {
+        "events_t": {
+          "value": 8,
+          "quote": "vaccinated group 8 TB cases among 2545 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "n_t": {
+          "value": 2545,
+          "quote": "vaccinated group 8 TB cases among 2545 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "events_c": {
+          "value": 10,
+          "quote": "unvaccinated group 10 TB cases among 629 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "n_c": {
+          "value": 629,
+          "quote": "unvaccinated group 10 TB cases among 629 participants",
+          "location": "Colditz 1994, Table 1"
+        }
+      }
+    }
+  ],
+  "moderators": {
+    "ablat": {
+      "value": 19,
+      "quote": "absolute latitude 19 degrees",
+      "location": "Colditz 1994, Table 1"
+    },
+    "alloc": {
+      "value": "random",
+      "quote": "allocation random",
+      "location": "Colditz 1994, Table 1"
+    }
+  }
+}

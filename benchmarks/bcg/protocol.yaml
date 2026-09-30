@@ -1,0 +1,26 @@
+title: 'BCG vaccine for preventing tuberculosis (benchmark: Colditz et al., 1994)'
+question: Does BCG vaccination reduce the risk of tuberculosis compared with no vaccination?
+study_designs:
+- RCT
+- non-randomised
+outcomes:
+- id: tb_cases
+  label: Tuberculosis cases
+  primary: true
+  data_type: binary
+  measure: RR
+  favours:
+  - Favours vaccine
+  - Favours control
+model:
+  method: REML
+  test: z
+  level: 95
+subgroups:
+- alloc
+meta_regression:
+- ablat
+sensitivity:
+  exclude_high_risk_of_bias: false
+  exclude_estimated_sds: false
+risk_of_bias_tool: none

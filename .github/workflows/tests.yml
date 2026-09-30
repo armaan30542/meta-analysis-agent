@@ -1,0 +1,41 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -r requirements.txt pytest
+      - run: pytest -q
+      - run: python -m metakit benchmark
+
+  metafor-crosscheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: r-lib/actions/setup-r@v2
+      - name: Install metafor
+        run: Rscript -e 'install.packages(c("metafor", "jsonlite"), repos = "https://cloud.r-project.org")'
+      - run: pip install -r requirements.txt pytest
+      - name: Regenerate reference values and confirm they still match
+        run: |
+          Rscript r/make_reference.R
+          pytest -q tests/test_models.py tests/test_convert.py
+      - name: End-to-end run with independent R cross-check
+        run: |
+          cp -r benchmarks/bcg /tmp/bcg
+          python -m metakit run -p /tmp/bcg

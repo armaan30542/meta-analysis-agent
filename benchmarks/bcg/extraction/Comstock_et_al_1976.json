@@ -1,0 +1,50 @@
+{
+  "study_id": "Comstock et al 1976",
+  "year": 1976,
+  "design": "non-randomised",
+  "citation": "Comstock et al (1976), as tabulated by Colditz et al., JAMA 1994;271:698-702",
+  "source_file": "fulltext/colditz1994_table1.md",
+  "extracted_by": "gold (metafor::dat.bcg)",
+  "outcomes": [
+    {
+      "outcome": "tb_cases",
+      "data_type": "binary",
+      "group_t": "BCG vaccinated",
+      "group_c": "not vaccinated",
+      "fields": {
+        "events_t": {
+          "value": 27,
+          "quote": "vaccinated group 27 TB cases among 16913 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "n_t": {
+          "value": 16913,
+          "quote": "vaccinated group 27 TB cases among 16913 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "events_c": {
+          "value": 29,
+          "quote": "unvaccinated group 29 TB cases among 17854 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "n_c": {
+          "value": 17854,
+          "quote": "unvaccinated group 29 TB cases among 17854 participants",
+          "location": "Colditz 1994, Table 1"
+        }
+      }
+    }
+  ],
+  "moderators": {
+    "ablat": {
+      "value": 33,
+      "quote": "absolute latitude 33 degrees",
+      "location": "Colditz 1994, Table 1"
+    },
+    "alloc": {
+      "value": "systematic",
+      "quote": "allocation systematic",
+      "location": "Colditz 1994, Table 1"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "study_id": "Uppsala",
+  "design": "RCT",
+  "source_file": "fulltext/normand1999_table.md",
+  "extracted_by": "gold (metafor::dat.normand1999)",
+  "outcomes": [
+    {
+      "outcome": "length_of_stay",
+      "data_type": "continuous",
+      "unit": "days",
+      "fields": {
+        "mean_t": {
+          "value": 30,
+          "quote": "specialist care mean length of stay 30 days (SD 27, n = 60)",
+          "location": "Normand 1999, Table I"
+        },
+        "sd_t": {
+          "value": 27,
+          "quote": "specialist care mean length of stay 30 days (SD 27, n = 60)",
+          "location": "Normand 1999, Table I"
+        },
+        "n_t": {
+          "value": 60,
+          "quote": "specialist care mean length of stay 30 days (SD 27, n = 60)",
+          "location": "Normand 1999, Table I"
+        },
+        "mean_c": {
+          "value": 23,
+          "quote": "routine care mean 23 days (SD 20, n = 52)",
+          "location": "Normand 1999, Table I"
+        },
+        "sd_c": {
+          "value": 20,
+          "quote": "routine care mean 23 days (SD 20, n = 52)",
+          "location": "Normand 1999, Table I"
+        },
+        "n_c": {
+          "value": 52,
+          "quote": "routine care mean 23 days (SD 20, n = 52)",
+          "location": "Normand 1999, Table I"
+        }
+      }
+    }
+  ]
+}

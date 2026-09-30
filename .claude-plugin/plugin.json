@@ -1,0 +1,8 @@
+{
+  "name": "metakit",
+  "version": "1.0.0",
+  "description": "Run a full, auditable meta-analysis from a systematic review's included studies: full-text retrieval, dual blind extraction with provenance checks, metafor-validated statistics, GRADE, and a manuscript-ready report.",
+  "author": { "name": "Armaan Punjani and Ramcharan Nagisetty" },
+  "license": "MIT",
+  "keywords": ["meta-analysis", "systematic review", "research", "statistics", "evidence synthesis", "PRISMA"]
+}

@@ -1,0 +1,23 @@
+{
+  "published": {
+    "source": "Colditz GA et al. Efficacy of BCG vaccine in the prevention of tuberculosis. JAMA 1994;271(9):698-702 (random-effects RR 0.49, 95% CI 0.34-0.70)",
+    "outcome": "tb_cases",
+    "estimate": 0.49,
+    "ci_lb": 0.34,
+    "ci_ub": 0.7,
+    "decimals": 2
+  },
+  "metafor": {
+    "outcome": "tb_cases",
+    "estimate": -0.714532348365101,
+    "ci_lb": -1.06689767574005,
+    "ci_ub": -0.36216702099015,
+    "tau2": 0.313243325980895,
+    "I2": 92.2213860749656,
+    "QE": 152.233008082373,
+    "trimfill_k0": 1,
+    "egger_p": 0.421784535672228,
+    "metareg_slope": -0.0291016609280148,
+    "subgroup_QM": 1.767513041773
+  }
+}

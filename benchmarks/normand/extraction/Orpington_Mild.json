@@ -1,0 +1,45 @@
+{
+  "study_id": "Orpington-Mild",
+  "design": "RCT",
+  "source_file": "fulltext/normand1999_table.md",
+  "extracted_by": "gold (metafor::dat.normand1999)",
+  "outcomes": [
+    {
+      "outcome": "length_of_stay",
+      "data_type": "continuous",
+      "unit": "days",
+      "fields": {
+        "mean_t": {
+          "value": 27,
+          "quote": "specialist care mean length of stay 27 days (SD 7, n = 31)",
+          "location": "Normand 1999, Table I"
+        },
+        "sd_t": {
+          "value": 7,
+          "quote": "specialist care mean length of stay 27 days (SD 7, n = 31)",
+          "location": "Normand 1999, Table I"
+        },
+        "n_t": {
+          "value": 31,
+          "quote": "specialist care mean length of stay 27 days (SD 7, n = 31)",
+          "location": "Normand 1999, Table I"
+        },
+        "mean_c": {
+          "value": 29,
+          "quote": "routine care mean 29 days (SD 4, n = 32)",
+          "location": "Normand 1999, Table I"
+        },
+        "sd_c": {
+          "value": 4,
+          "quote": "routine care mean 29 days (SD 4, n = 32)",
+          "location": "Normand 1999, Table I"
+        },
+        "n_c": {
+          "value": 32,
+          "quote": "routine care mean 29 days (SD 4, n = 32)",
+          "location": "Normand 1999, Table I"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use metakit, please cite it as below."
+title: "metakit: auditable, AI-driven meta-analysis"
+version: 1.0.0
+date-released: 2026-10-01
+license: MIT
+authors:
+  - family-names: Punjani
+    given-names: Armaan
+  - family-names: Nagisetty
+    given-names: Ramcharan

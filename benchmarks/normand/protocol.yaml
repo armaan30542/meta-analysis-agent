@@ -1,0 +1,23 @@
+title: 'Specialist stroke care and length of hospital stay (benchmark: Normand, 1999)'
+question: Does specialist stroke-unit care change length of hospital stay compared
+  with routine care?
+study_designs:
+- RCT
+outcomes:
+- id: length_of_stay
+  label: Length of hospital stay
+  primary: true
+  data_type: continuous
+  measure: MD
+  unit: days
+  favours:
+  - Shorter with specialist care
+  - Longer with specialist care
+model:
+  method: REML
+  test: z
+  level: 95
+sensitivity:
+  exclude_high_risk_of_bias: false
+  exclude_estimated_sds: true
+risk_of_bias_tool: none

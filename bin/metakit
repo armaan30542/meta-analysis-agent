@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# metakit launcher: creates a private virtualenv on first run, then runs the CLI.
+# Works from the Claude Code plugin, from Codex, or from a plain terminal.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+HOME_DIR="${METAKIT_HOME:-${CLAUDE_PLUGIN_DATA:-$HOME/.metakit}}"
+VENV="$HOME_DIR/venv"
+STAMP="$VENV/.requirements.sha"
+REQ_SHA="$( (sha256sum "$ROOT/requirements.txt" 2>/dev/null || shasum -a 256 "$ROOT/requirements.txt") | cut -d' ' -f1)"
+if [ ! -x "$VENV/bin/python" ] || [ "$(cat "$STAMP" 2>/dev/null)" != "$REQ_SHA" ]; then
+  echo "metakit: setting up Python environment in $VENV (first run only)..." >&2
+  mkdir -p "$HOME_DIR"
+  PY="$(command -v python3 || command -v python)"
+  "$PY" -m venv "$VENV"
+  "$VENV/bin/python" -m pip install --quiet --upgrade pip >&2
+  "$VENV/bin/python" -m pip install --quiet -r "$ROOT/requirements.txt" >&2
+  echo "$REQ_SHA" > "$STAMP"
+fi
+PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}" exec "$VENV/bin/python" -m metakit "$@"

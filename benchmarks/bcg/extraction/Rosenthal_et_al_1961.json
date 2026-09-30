@@ -1,0 +1,50 @@
+{
+  "study_id": "Rosenthal et al 1961",
+  "year": 1961,
+  "design": "non-randomised",
+  "citation": "Rosenthal et al (1961), as tabulated by Colditz et al., JAMA 1994;271:698-702",
+  "source_file": "fulltext/colditz1994_table1.md",
+  "extracted_by": "gold (metafor::dat.bcg)",
+  "outcomes": [
+    {
+      "outcome": "tb_cases",
+      "data_type": "binary",
+      "group_t": "BCG vaccinated",
+      "group_c": "not vaccinated",
+      "fields": {
+        "events_t": {
+          "value": 17,
+          "quote": "vaccinated group 17 TB cases among 1716 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "n_t": {
+          "value": 1716,
+          "quote": "vaccinated group 17 TB cases among 1716 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "events_c": {
+          "value": 65,
+          "quote": "unvaccinated group 65 TB cases among 1665 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "n_c": {
+          "value": 1665,
+          "quote": "unvaccinated group 65 TB cases among 1665 participants",
+          "location": "Colditz 1994, Table 1"
+        }
+      }
+    }
+  ],
+  "moderators": {
+    "ablat": {
+      "value": 42,
+      "quote": "absolute latitude 42 degrees",
+      "location": "Colditz 1994, Table 1"
+    },
+    "alloc": {
+      "value": "systematic",
+      "quote": "allocation systematic",
+      "location": "Colditz 1994, Table 1"
+    }
+  }
+}

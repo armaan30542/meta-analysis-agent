@@ -1,0 +1,50 @@
+{
+  "study_id": "Aronson 1948",
+  "year": 1948,
+  "design": "RCT",
+  "citation": "Aronson (1948), as tabulated by Colditz et al., JAMA 1994;271:698-702",
+  "source_file": "fulltext/colditz1994_table1.md",
+  "extracted_by": "gold (metafor::dat.bcg)",
+  "outcomes": [
+    {
+      "outcome": "tb_cases",
+      "data_type": "binary",
+      "group_t": "BCG vaccinated",
+      "group_c": "not vaccinated",
+      "fields": {
+        "events_t": {
+          "value": 4,
+          "quote": "vaccinated group 4 TB cases among 123 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "n_t": {
+          "value": 123,
+          "quote": "vaccinated group 4 TB cases among 123 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "events_c": {
+          "value": 11,
+          "quote": "unvaccinated group 11 TB cases among 139 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "n_c": {
+          "value": 139,
+          "quote": "unvaccinated group 11 TB cases among 139 participants",
+          "location": "Colditz 1994, Table 1"
+        }
+      }
+    }
+  ],
+  "moderators": {
+    "ablat": {
+      "value": 44,
+      "quote": "absolute latitude 44 degrees",
+      "location": "Colditz 1994, Table 1"
+    },
+    "alloc": {
+      "value": "random",
+      "quote": "allocation random",
+      "location": "Colditz 1994, Table 1"
+    }
+  }
+}

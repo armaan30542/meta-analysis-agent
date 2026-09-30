@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>metakit: meta-analysis an AI can't fake</title>
+<meta name="description" content="An AI agent reads the papers; validated code does the math. Every number traced to the sentence it came from. Reproduces a published JAMA meta-analysis exactly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F4F6F3;
+    --ink: #16213A;
+    --ink-soft: #4A5568;
+    --rule: #C9CFCB;
+    --plot: #1B4F72;
+    --caught: #B7791F;
+    --caught-bg: #FBF1DE;
+    --white: #FFFFFF;
+    --measure: 68ch;
+  }
+  * { box-sizing: border-box; }
+  html { font-size: 18px; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.55; font-variant-numeric: tabular-nums;
+  }
+  a { color: var(--plot); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--caught); outline-offset: 3px; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 28px; }
+  header.top { padding: 22px 0; display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .brand { font-weight: 700; font-size: 1.1rem; letter-spacing: -0.01em; }
+  nav a { margin-left: 20px; font-size: 0.9rem; color: var(--ink-soft); text-decoration: none; }
+  nav a:hover { color: var(--ink); text-decoration: underline; }
+
+  .hero { padding: 56px 0 40px; }
+  h1 { font-size: clamp(2.1rem, 5vw, 3.3rem); line-height: 1.08; letter-spacing: -0.025em; margin: 0 0 20px; max-width: 18ch; }
+  .lede { font-size: 1.15rem; color: var(--ink-soft); max-width: 58ch; margin: 0; }
+
+  .plot-card { margin: 44px 0 0; background: var(--white); border: 1px solid var(--rule); padding: 26px 28px 18px; }
+  .plot-card svg { width: 100%; height: auto; display: block; }
+  .plot-caption { font-size: 0.85rem; color: var(--ink-soft); margin: 10px 0 0; max-width: var(--measure); }
+
+  section { padding: 64px 0; border-top: 1px solid var(--rule); }
+  h2 { font-size: 1.7rem; letter-spacing: -0.015em; line-height: 1.2; margin: 0 0 14px; max-width: 30ch; }
+  h3 { font-size: 1.05rem; margin: 0 0 6px; }
+  p { max-width: var(--measure); }
+
+  /* the catch */
+  .catch { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-top: 30px; border: 1px solid var(--rule); background: var(--white); }
+  .catch > div { padding: 22px 24px; }
+  .catch > div + div { border-left: 1px solid var(--rule); }
+  .catch .who { font-size: 0.85rem; color: var(--ink-soft); margin: 0 0 10px; }
+  .catch blockquote { margin: 0; font-size: 1.05rem; line-height: 1.6; }
+  mark { background: none; color: inherit; border-bottom: 3px solid var(--plot); padding: 0 1px; }
+  mark.bad { border-bottom-color: var(--caught); background: var(--caught-bg); }
+  .verdict { grid-column: 1 / -1; border-top: 1px solid var(--rule); background: var(--caught-bg); padding: 18px 24px; display: grid; grid-template-columns: auto 1fr; gap: 6px 22px; align-items: baseline; }
+  .verdict dt { font-weight: 700; }
+  .verdict dd { margin: 0; }
+
+  /* pipeline: a real sequence, so numbered */
+  ol.steps { list-style: none; padding: 0; margin: 30px 0 0; counter-reset: s; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border-top: 2px solid var(--ink); }
+  ol.steps li { counter-increment: s; padding: 18px 20px 20px 0; border-bottom: 1px solid var(--rule); }
+  ol.steps li::before { content: counter(s); display: block; font-weight: 700; color: var(--plot); font-size: 1.4rem; margin-bottom: 4px; }
+  ol.steps .who { font-size: 0.8rem; color: var(--ink-soft); }
+  ol.steps p { font-size: 0.93rem; margin: 4px 0 0; }
+
+  .proof { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; margin-top: 30px; }
+  .proof .n { font-size: 2.2rem; font-weight: 700; color: var(--plot); line-height: 1.1; }
+  .proof p { font-size: 0.95rem; margin: 6px 0 0; }
+
+  figure { margin: 30px 0 0; }
+  figure img { width: 100%; height: auto; border: 1px solid var(--rule); background: var(--white); display: block; }
+  figcaption { font-size: 0.85rem; color: var(--ink-soft); margin-top: 8px; max-width: var(--measure); }
+  .fig-row { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; align-items: start; }
+
+  pre { background: var(--ink); color: #E8ECEF; padding: 20px 22px; overflow-x: auto; font-size: 0.85rem; line-height: 1.6; margin: 24px 0 0; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  p code { background: #E4E8E4; padding: 1px 5px; font-size: 0.88em; }
+
+  footer { border-top: 1px solid var(--rule); padding: 30px 0 60px; font-size: 0.88rem; color: var(--ink-soft); }
+
+  @media (max-width: 760px) {
+    html { font-size: 17px; }
+    .catch { grid-template-columns: 1fr; }
+    .catch > div + div { border-left: none; border-top: 1px solid var(--rule); }
+    ol.steps, .proof, .fig-row { grid-template-columns: 1fr; }
+    nav a { margin: 0 16px 0 0; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .diamond-new { transform-origin: 337px 60px; animation: settle 900ms 250ms cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes settle { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="brand">metakit</span>
+    <nav aria-label="Main">
+      <a href="#catch">How it checks</a>
+      <a href="#proof">Validation</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/YOUR-GITHUB-USERNAME/meta-analysis-agent">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <h1>Meta-analysis where the AI reads and the math is proven.</h1>
+    <p class="lede">An AI agent extracts numbers from papers, but every number must carry the sentence it came from, and software checks that sentence against the paper. Validated code does every calculation. Starting from the raw trial data, it reproduces a published <i>JAMA</i> meta-analysis to the second decimal.</p>
+
+    <div class="plot-card">
+      <svg viewBox="0 0 640 150" role="img" aria-labelledby="hero-t hero-d">
+        <title id="hero-t">Published and reproduced BCG vaccine results</title>
+        <desc id="hero-d">Forest-plot comparison. Colditz et al., JAMA 1994: risk ratio 0.49, 95% CI 0.34 to 0.70. metakit reproduction: risk ratio 0.49, 95% CI 0.34 to 0.70. The two diamonds are identical.</desc>
+        <!-- axis: log scale 0.1 to 2, x = 40 + 560 * ln(v/0.1)/ln(20) -->
+        <line x1="470.4" y1="12" x2="470.4" y2="112" stroke="#9AA3AB" stroke-dasharray="4 4"/>
+        <g font-size="12" fill="#4A5568" text-anchor="middle">
+          <line x1="40" y1="118" x2="600" y2="118" stroke="#16213A"/>
+          <line x1="40" y1="118" x2="40" y2="123" stroke="#16213A"/><text x="40" y="138">0.1</text>
+          <line x1="169.6" y1="118" x2="169.6" y2="123" stroke="#16213A"/><text x="169.6" y="138">0.2</text>
+          <line x1="340.9" y1="118" x2="340.9" y2="123" stroke="#16213A"/><text x="340.9" y="138">0.5</text>
+          <line x1="470.4" y1="118" x2="470.4" y2="123" stroke="#16213A"/><text x="470.4" y="138">1</text>
+          <line x1="600" y1="118" x2="600" y2="123" stroke="#16213A"/><text x="600" y="138">2</text>
+        </g>
+        <g font-size="13" fill="#16213A">
+          <text x="40" y="34">Published (Colditz et al., JAMA 1994)</text>
+          <text x="600" y="34" text-anchor="end" font-weight="700">0.49 [0.34, 0.70]</text>
+          <polygon points="268.8,52 337.1,42 403.8,52 337.1,62" fill="none" stroke="#16213A" stroke-width="1.6"/>
+          <text x="40" y="84">metakit, from the 13 trials' raw counts</text>
+          <text x="600" y="84" text-anchor="end" font-weight="700">0.49 [0.34, 0.70]</text>
+          <polygon class="diamond-new" points="268.8,100 337.1,90 403.8,100 337.1,110" fill="#1B4F72"/>
+        </g>
+        <text x="478" y="108" font-size="11" fill="#4A5568">no effect</text>
+      </svg>
+      <p class="plot-caption">Risk ratio for tuberculosis with BCG vaccination, random-effects model, log scale. Every figure on this page is generated by metakit; nothing is typed in by hand.</p>
+    </div>
+  </div>
+</div>
+
+<section id="catch">
+  <div class="wrap">
+    <h2>The error an AI makes is almost right. That is the one we built for.</h2>
+    <p>A language model rarely invents a whole paper. It misreads one digit in a real sentence. That fake is 98.9% similar to the original, close enough to pass a normal text match. metakit checks the number against the paper's own copy of the sentence, not the extractor's.</p>
+
+    <div class="catch" aria-live="polite">
+      <div>
+        <p class="who">The paper</p>
+        <blockquote>In the athlete group (n = 212) the mean ST elevation in V2 was <mark>0.21</mark> mV (SD 0.08), compared with 0.12 mV (SD 0.05) in controls.</blockquote>
+      </div>
+      <div>
+        <p class="who">What an extractor submitted</p>
+        <blockquote id="fake">In the athlete group (n = 212) the mean ST elevation in V2 was <mark class="bad">0.31</mark> mV (SD 0.08), compared with 0.12 mV (SD 0.05) in controls.</blockquote>
+      </div>
+      <dl class="verdict" id="verdict">
+        <dt>Quote found?</dt><dd>Yes, at 98.9% similarity. A plain fuzzy match would accept it.</dd>
+        <dt>Number in the paper?</dt><dd>No. The paper's version of this sentence says 0.21, not 0.31.</dd>
+        <dt>Result</dt><dd><b>Rejected.</b> The extractor must re-read the source before anything is analysed.</dd>
+      </dl>
+    </div>
+    <p style="margin-top:18px">Two blind extractors also read every paper independently. Their outputs are compared field by field, and a person settles every disagreement. This follows the Cochrane standard of double data extraction.</p>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <h2>Nine steps, and a person signs off on the judgement calls.</h2>
+    <ol class="steps">
+      <li><h3>Protocol</h3><span class="who">You approve</span><p>Outcomes, effect measures and subgroups are fixed before any data is seen.</p></li>
+      <li><h3>Retrieve</h3><span class="who">Software</span><p>Open-access full texts, tables intact, from PubMed Central and Europe PMC. PDFs are converted by code, not the AI.</p></li>
+      <li><h3>Extract twice</h3><span class="who">Two AI agents, blind</span><p>Every number is copied exactly, with its quote and table location.</p></li>
+      <li><h3>Validate</h3><span class="who">Software</span><p>Number in quote, quote in paper, plausibility, and standard errors reported as SDs.</p></li>
+      <li><h3>Reconcile</h3><span class="who">You resolve</span><p>Every disagreement between the two extractions is listed for a decision.</p></li>
+      <li><h3>Risk of bias</h3><span class="who">You confirm</span><p>RoB 2, ROBINS-I, Newcastle-Ottawa or QUIPS, each judgement backed by a quote.</p></li>
+      <li><h3>Analyse</h3><span class="who">Software</span><p>REML random effects with Knapp-Hartung, prediction intervals, subgroups, meta-regression, leave-one-out, Egger's test and trim-and-fill.</p></li>
+      <li><h3>Report</h3><span class="who">You sign off</span><p>Methods and results prose, figures, PRISMA diagram and a GRADE summary with a reason for every downgrade.</p></li>
+      <li><h3>Cross-check</h3><span class="who">R / metafor</span><p>The whole analysis is re-run in the field's reference software. Any difference fails loudly.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section id="proof">
+  <div class="wrap">
+    <h2>How we know it's right</h2>
+    <div class="proof">
+      <div><div class="n">1e-16</div><p>Largest difference from R's metafor at matched convergence settings: floating-point precision.</p></div>
+      <div><div class="n">87</div><p>Automated tests, including invented numbers, fabricated quotes and doctored quotes the validator must catch.</p></div>
+      <div><div class="n">2</div><p>Published meta-analyses reproduced end to end on every commit: BCG vaccine (<i>JAMA</i> 1994) and stroke-unit care (<i>Stat Med</i> 1999).</p></div>
+    </div>
+    <div class="fig-row">
+      <figure>
+        <img src="assets/bcg_forest.png" alt="Forest plot of 13 BCG vaccine trials. Individual risk ratios range from 0.20 to 1.56; the random-effects summary is 0.49 (95% CI 0.34 to 0.70) with I-squared 92% and a prediction interval of 0.15 to 1.55." loading="lazy">
+        <figcaption>Forest plot from the BCG benchmark. The grey bar is the 95% prediction interval: the average effect is clearly protective, but in some settings the vaccine may do little.</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/bcg_funnel.png" alt="Funnel plot of the 13 trials with one study imputed by trim-and-fill on the right side." loading="lazy">
+        <figcaption>Funnel plot with trim-and-fill. Egger's test p = 0.42.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <h2>Install</h2>
+    <p>As a Claude Code plugin, then ask Claude to run a meta-analysis or type <code>/metakit:meta-analysis</code>:</p>
+<pre><code>claude plugin marketplace add YOUR-GITHUB-USERNAME/meta-analysis-agent
+claude plugin install metakit@metakit</code></pre>
+    <p style="margin-top:24px">From the command line, with any agent (Codex reads <code>AGENTS.md</code>):</p>
+<pre><code>git clone https://github.com/YOUR-GITHUB-USERNAME/meta-analysis-agent
+cd meta-analysis-agent
+./bin/metakit benchmark          # reproduce the published results
+./bin/metakit init my-review     # start your own</code></pre>
+    <p style="margin-top:24px">Read <a href="https://github.com/YOUR-GITHUB-USERNAME/meta-analysis-agent/blob/main/docs/how-it-works.md">how it works in plain language</a> or <a href="https://github.com/YOUR-GITHUB-USERNAME/meta-analysis-agent/blob/main/docs/methods.md">the statistical methods and references</a>.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Built by Armaan Punjani and Ramcharan Nagisetty. MIT licence. Statistics validated against metafor (Viechtbauer, 2010).
+  </div>
+</footer>
+</body>
+</html>

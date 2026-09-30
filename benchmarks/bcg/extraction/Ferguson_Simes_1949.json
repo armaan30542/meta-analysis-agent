@@ -1,0 +1,50 @@
+{
+  "study_id": "Ferguson & Simes 1949",
+  "year": 1949,
+  "design": "RCT",
+  "citation": "Ferguson & Simes (1949), as tabulated by Colditz et al., JAMA 1994;271:698-702",
+  "source_file": "fulltext/colditz1994_table1.md",
+  "extracted_by": "gold (metafor::dat.bcg)",
+  "outcomes": [
+    {
+      "outcome": "tb_cases",
+      "data_type": "binary",
+      "group_t": "BCG vaccinated",
+      "group_c": "not vaccinated",
+      "fields": {
+        "events_t": {
+          "value": 6,
+          "quote": "vaccinated group 6 TB cases among 306 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "n_t": {
+          "value": 306,
+          "quote": "vaccinated group 6 TB cases among 306 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "events_c": {
+          "value": 29,
+          "quote": "unvaccinated group 29 TB cases among 303 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "n_c": {
+          "value": 303,
+          "quote": "unvaccinated group 29 TB cases among 303 participants",
+          "location": "Colditz 1994, Table 1"
+        }
+      }
+    }
+  ],
+  "moderators": {
+    "ablat": {
+      "value": 55,
+      "quote": "absolute latitude 55 degrees",
+      "location": "Colditz 1994, Table 1"
+    },
+    "alloc": {
+      "value": "random",
+      "quote": "allocation random",
+      "location": "Colditz 1994, Table 1"
+    }
+  }
+}

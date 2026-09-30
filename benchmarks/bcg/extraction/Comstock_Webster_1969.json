@@ -1,0 +1,50 @@
+{
+  "study_id": "Comstock & Webster 1969",
+  "year": 1969,
+  "design": "non-randomised",
+  "citation": "Comstock & Webster (1969), as tabulated by Colditz et al., JAMA 1994;271:698-702",
+  "source_file": "fulltext/colditz1994_table1.md",
+  "extracted_by": "gold (metafor::dat.bcg)",
+  "outcomes": [
+    {
+      "outcome": "tb_cases",
+      "data_type": "binary",
+      "group_t": "BCG vaccinated",
+      "group_c": "not vaccinated",
+      "fields": {
+        "events_t": {
+          "value": 5,
+          "quote": "vaccinated group 5 TB cases among 2498 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "n_t": {
+          "value": 2498,
+          "quote": "vaccinated group 5 TB cases among 2498 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "events_c": {
+          "value": 3,
+          "quote": "unvaccinated group 3 TB cases among 2341 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "n_c": {
+          "value": 2341,
+          "quote": "unvaccinated group 3 TB cases among 2341 participants",
+          "location": "Colditz 1994, Table 1"
+        }
+      }
+    }
+  ],
+  "moderators": {
+    "ablat": {
+      "value": 33,
+      "quote": "absolute latitude 33 degrees",
+      "location": "Colditz 1994, Table 1"
+    },
+    "alloc": {
+      "value": "systematic",
+      "quote": "allocation systematic",
+      "location": "Colditz 1994, Table 1"
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "study_id": "Hart & Sutherland 1977",
+  "year": 1977,
+  "design": "RCT",
+  "citation": "Hart & Sutherland (1977), as tabulated by Colditz et al., JAMA 1994;271:698-702",
+  "source_file": "fulltext/colditz1994_table1.md",
+  "extracted_by": "gold (metafor::dat.bcg)",
+  "outcomes": [
+    {
+      "outcome": "tb_cases",
+      "data_type": "binary",
+      "group_t": "BCG vaccinated",
+      "group_c": "not vaccinated",
+      "fields": {
+        "events_t": {
+          "value": 62,
+          "quote": "vaccinated group 62 TB cases among 13598 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "n_t": {
+          "value": 13598,
+          "quote": "vaccinated group 62 TB cases among 13598 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "events_c": {
+          "value": 248,
+          "quote": "unvaccinated group 248 TB cases among 12867 participants",
+          "location": "Colditz 1994, Table 1"
+        },
+        "n_c": {
+          "value": 12867,
+          "quote": "unvaccinated group 248 TB cases among 12867 participants",
+          "location": "Colditz 1994, Table 1"
+        }
+      }
+    }
+  ],
+  "moderators": {
+    "ablat": {
+      "value": 52,
+      "quote": "absolute latitude 52 degrees",
+      "location": "Colditz 1994, Table 1"
+    },
+    "alloc": {
+      "value": "random",
+      "quote": "allocation random",
+      "location": "Colditz 1994, Table 1"
+    }
+  }
+}
