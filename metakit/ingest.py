@@ -73,6 +73,8 @@ def _parse_ris(text: str) -> list[dict]:
             cur.setdefault("authors", val)
         elif tag == "DO":
             cur["doi"] = val
+        elif tag in ("AB", "N2"):
+            cur["abstract"] = (cur.get("abstract", "") + " " + val).strip()
         elif tag in ("JO", "JF", "T2"):
             cur.setdefault("journal", val)
         elif tag == "AN" and re.fullmatch(r"\d+", val):

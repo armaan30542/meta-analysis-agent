@@ -1,0 +1,255 @@
+# Contributing
+
+Thank you for your interest in contributing to **PubMed Search Builder**!
+
+## How to Contribute
+
+We welcome contributions in these areas:
+
+### 1. **New Methodological Filters & Hedges**
+
+If you've validated a new search filter (diagnostic accuracy, prognosis, qualitative studies, etc.), please add it to `references/validated-methodological-filters-and-hedges.md` with:
+- Filter name and source (Cochrane, McMaster HIRU, PubMed Clinical Queries, etc.)
+- PubMed syntax
+- Version (sensitivity-maximising, specificity-maximising, balanced)
+- Link to published validation study
+- Example use case
+
+### 2. **Documentation & Examples**
+
+- New search strategy examples for different evidence types
+- Improved tutorials or workflow documentation
+- Translations of key concepts to other languages
+- Clarifications on ambiguous sections
+
+### 3. **Tool Improvements**
+
+- Bug fixes in `pubmed_tool.py`, `mesh_tool.py`, `hooks_tool.py`, or `manifest_tool.py`
+- Performance improvements
+- Better error messages
+- New command-line options or features
+- Test coverage
+
+### 4. **Bug Reports**
+
+Found a bug? Please open a GitHub issue with:
+- Python version
+- Operating system
+- The exact command that failed
+- Full error message (output from `--help` first, then your command)
+- Steps to reproduce
+- What you expected to happen
+
+### 5. **Feature Requests**
+
+Have an idea? Open a GitHub issue describing:
+- The problem you're trying to solve
+- Your proposed solution
+- Why this would be useful to others
+- Alternative approaches you considered
+
+## Getting Started
+
+1. **Fork the repository** on GitHub
+2. **Clone your fork** locally:
+   ```bash
+   git clone https://github.com/YOUR-USERNAME/pubmed-search-builder.git
+   cd pubmed-search-builder
+   ```
+3. **Create a feature branch**:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+4. **Make your changes**
+5. **Test your changes** (see below)
+6. **Commit with clear messages**:
+   ```bash
+   git commit -m "Add support for [feature]" -m "Description of the change"
+   ```
+7. **Push to your fork**:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+8. **Open a Pull Request** on GitHub
+
+## Development Setup
+
+1. Clone the repository (see above)
+2. Install Python 3.10+
+3. Create a `.env` file with your NCBI credentials (see [INSTALL.md](INSTALL.md))
+4. Test your setup:
+   ```bash
+   python scripts/pubmed_tool.py doctor
+   ```
+
+## Testing Your Changes
+
+### Repository Lifecycle Hooks
+
+This repository commits equivalent project hooks for Codex (`.codex/hooks.json`) and
+Claude Code (`.claude/settings.json`). They load run state at session and subagent start,
+screen prompts for likely secrets, require material PubMed commands to use
+`scripts/workflow_tool.py`, and run the complete-loop manifest gate before handoff.
+
+Project hooks run only after the workspace is trusted. Inspect and approve them with
+`/hooks`; Codex records trust against the current hook hash, so hook changes require a new
+review. Claude Code likewise requires workspace trust and exposes its active project hooks
+through `/hooks`. Non-managed hooks can be disabled there for diagnostics.
+
+Create or attach a run before material search work:
+
+```bash
+python scripts/workflow_tool.py init --manifest /path/to/run/run_manifest.json --topic-slug demo
+python scripts/workflow_tool.py attach --manifest /path/to/run/run_manifest.json
+python scripts/workflow_tool.py status --manifest /path/to/run/run_manifest.json
+```
+
+At Audit output, create the deterministic handoff through the workflow wrapper so the
+export is registered atomically with the exact strategy input hash:
+
+```bash
+python scripts/workflow_tool.py export-final --manifest /path/to/run/run_manifest.json --strategy /path/to/run/strategy.txt --output /path/to/run/final_strategy.md
+```
+
+The complete-loop and Stop gates require this export to occur after final QA and the
+final PubMed count, and require its sole strategy input hash to equal the one hash shared
+by both validation entries. Direct `export_final.py` calls are blocked by both clients.
+
+Use `manifest_tool.py state set-question` when the workflow legitimately pauses for a user
+decision. For a longer pause or an abandoned build, record `state set-run-status paused` or
+`abandoned` with a reason. The Stop hook allows those states; otherwise it continues an
+incomplete handoff once and then reports the remaining gaps without forming a loop.
+
+Run hook and completion tests with:
+
+```bash
+python -m unittest tests.test_codex_hooks tests.test_manifest_complete_loop tests.test_workflow_tool
+python scripts/repository_hygiene.py
+```
+
+The hooks are local-only. They read event JSON, the selected run manifest, and local
+artifacts; they do not access the network or read session transcripts. Session-to-run
+pointers live under the gitignored `.codex/state/` directory.
+
+### For Tool Changes
+
+If you modify `pubmed_tool.py`, `mesh_tool.py`, or `hooks_tool.py`:
+
+1. **Syntax check**:
+   ```bash
+   python -m py_compile scripts/pubmed_tool.py
+   python -m py_compile scripts/mesh_tool.py
+   python -m py_compile scripts/hooks_tool.py
+   python -m py_compile scripts/manifest_tool.py
+   ```
+
+2. **Run the tool**:
+   ```bash
+   python scripts/pubmed_tool.py doctor
+   python scripts/mesh_tool.py lookup --label "Asthma"
+   python scripts/hooks_tool.py final-qa --strategy-file /tmp/test.txt
+   ```
+
+3. **Test with real queries**:
+   ```bash
+   # Count-test a simple query
+   python scripts/pubmed_tool.py search "asthma[Mesh]" --retmax 0
+
+   # Fetch a known PMID
+   python scripts/pubmed_tool.py fetch --pmids 24102982 --output fetch_24102982.json
+   ```
+
+### For Documentation Changes
+
+1. Check for typos and clarity
+2. Verify any code examples work (test in isolation if possible)
+3. Ensure links and file paths are correct
+
+## Code Style
+
+### Python
+
+- Follow PEP 8 (readable, indented with 4 spaces)
+- Use type hints where possible
+- Add docstrings to functions
+- Avoid hard-coded API keys or credentials
+- Never print sensitive information
+
+Example:
+
+```python
+def example_function(param: str) -> dict:
+    """
+    Short description.
+
+    Args:
+        param: Description of param.
+
+    Returns:
+        Dictionary with results.
+    """
+    result = {}
+    # Your code here
+    return result
+```
+
+### Markdown
+
+- Use clear headings (`#`, `##`, `###`)
+- Include code blocks with language tags:
+  ```bash
+  # Good
+  ```
+- Link to related docs
+- Keep line length ~80 characters for readability
+
+## Commit Message Guidelines
+
+Write clear, descriptive commit messages:
+
+```
+Short description of the change (50 chars max)
+
+Longer explanation if needed. Explain the *why*, not the *what*.
+Wrap at ~72 characters.
+
+Related to issue #123
+```
+
+## Pull Request Guidelines
+
+1. **Keep it focused**: One feature or fix per PR
+2. **Add description**: Explain what you changed and why
+3. **Link issues**: Reference any related GitHub issues
+4. **Test**: Confirm your changes work (especially for tools)
+5. **Document**: Update relevant documentation if needed
+
+Example PR description:
+
+```
+## Summary
+Add support for [feature].
+
+## Changes
+- Modified `pubmed_tool.py` to [brief description]
+- Added example to `references/examples.md`
+
+## Testing
+Tested with:
+- `python scripts/pubmed_tool.py [command]`
+- Query: "asthma[Mesh]" -> count = 12345 (as expected)
+
+Closes #123
+```
+
+## License
+
+By contributing, you agree that your contributions are licensed under the MIT License (see [LICENSE](LICENSE)).
+
+## Questions?
+
+Open a GitHub issue or discussion. We're here to help!
+
+---
+
+Thank you for making PubMed Search Builder better!

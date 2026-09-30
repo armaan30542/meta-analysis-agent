@@ -1,12 +1,14 @@
 {
   "name": "metakit",
   "description": "Auditable AI-driven meta-analysis",
-  "owner": { "name": "Armaan Punjani" },
+  "owner": {
+    "name": "Armaan Punjani"
+  },
   "plugins": [
     {
       "name": "metakit",
       "source": ".",
-      "description": "Meta-analysis from included studies to GRADE-rated report, with every number traceable to its source."
+      "description": "Systematic review and meta-analysis from question to GRADE-rated report, every number traceable to its source."
     }
   ]
 }

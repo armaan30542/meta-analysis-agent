@@ -7,6 +7,24 @@ allowed-tools: Bash(${CLAUDE_PLUGIN_ROOT}/bin/metakit *)
 
 # Meta-analysis with metakit
 
+## Overview
+
+Stage 4 of the evidence-synthesis library: from an included-studies list to a validated,
+GRADE-rated meta-analysis. Extraction is dual and blind (the `extractor` agent, twice), every
+number is provenance-checked against the paper, and all statistics are computed by metakit
+(validated against R's metafor).
+
+## When to Use
+
+The user has included studies (from the `literature-screening` skill, Ram's systematic review
+agent, a CSV/RIS, or PMIDs) and wants them pooled. For the protocol, use `review-team`; for the
+search, `pubmed-search-builder`; for the whole pipeline, `systematic-review`.
+
+## Key Capabilities and Usage Examples
+
+The steps below are the capabilities, in order. The benchmark (`metakit benchmark`) is the
+worked example: it reproduces Colditz et al. (*JAMA* 1994) end to end.
+
 You are running a meta-analysis that a professor will scrutinize. The division of labour is
 strict and is the whole point of this tool:
 

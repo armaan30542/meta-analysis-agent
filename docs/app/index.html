@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>metakit app: run a meta-analysis in your browser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<style>
+  :root { --paper:#F4F6F3; --ink:#16213A; --soft:#4A5568; --rule:#C9CFCB; --plot:#1B4F72;
+          --caught:#B7791F; --caught-bg:#FBF1DE; --ok:#2E6B3F; --ok-bg:#E4F0E6; --white:#fff; }
+  * { box-sizing: border-box; }
+  html { font-size: 16px; }
+  body { margin:0; background:var(--paper); color:var(--ink); line-height:1.5;
+         font-family:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif; font-variant-numeric: tabular-nums; }
+  a { color:var(--plot); }
+  :focus-visible { outline:3px solid var(--caught); outline-offset:2px; }
+  header.top { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:14px 24px; border-bottom:1px solid var(--rule); background:var(--white); flex-wrap:wrap; }
+  .brand { font-weight:700; font-size:1.05rem; }
+  .brand a { color:inherit; text-decoration:none; }
+  #engine { font-size:.85rem; color:var(--soft); }
+  #engine.ready { color:var(--ok); }
+  .shell { display:grid; grid-template-columns: 230px 1fr; min-height: calc(100vh - 56px); }
+  nav.steps { border-right:1px solid var(--rule); padding:20px 0; background:var(--paper); }
+  nav.steps ol { list-style:none; margin:0; padding:0; counter-reset:s; }
+  nav.steps li { counter-increment:s; }
+  nav.steps ol button { all:unset; box-sizing:border-box; display:block; width:100%; padding:10px 22px; cursor:pointer; color:var(--soft); }
+  nav.steps ol button::before { content:counter(s); display:inline-block; width:1.6em; font-weight:700; color:var(--plot); }
+  nav.steps ol button[aria-current="step"] { color:var(--ink); font-weight:700; background:var(--white); border-left:3px solid var(--plot); padding-left:19px; }
+  nav.steps .aside { padding:18px 22px; font-size:.82rem; color:var(--soft); border-top:1px solid var(--rule); margin-top:18px; }
+  main { padding:28px 36px 80px; max-width: 1100px; }
+  h1 { font-size:1.6rem; margin:0 0 6px; letter-spacing:-.01em; }
+  h2 { font-size:1.15rem; margin:28px 0 8px; }
+  p.lead { color:var(--soft); margin:0 0 20px; max-width:70ch; }
+  label { display:block; font-weight:700; font-size:.9rem; margin:14px 0 4px; }
+  .hint { font-weight:400; color:var(--soft); font-size:.85rem; }
+  input[type=text], input[type=password], input[type=number], select, textarea {
+    font:inherit; width:100%; padding:8px 10px; border:1px solid var(--rule); background:var(--white); color:var(--ink); border-radius:2px; }
+  textarea { min-height:90px; }
+  .row { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:0 16px; }
+  button.btn { font:inherit; padding:8px 16px; border:1px solid var(--ink); background:var(--white); color:var(--ink); cursor:pointer; border-radius:2px; }
+  button.btn:hover { background:var(--ink); color:var(--paper); }
+  button.primary { background:var(--plot); border-color:var(--plot); color:#fff; }
+  button.primary:hover { background:var(--ink); border-color:var(--ink); }
+  button.btn:disabled { opacity:.45; cursor:not-allowed; }
+  button.link { all:unset; color:var(--plot); text-decoration:underline; cursor:pointer; font-size:.88rem; }
+  .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; align-items:center; }
+  .panel { background:var(--white); border:1px solid var(--rule); padding:18px 20px; margin-top:16px; }
+  .outcome { border-left:3px solid var(--plot); }
+  table.grid { border-collapse:collapse; width:100%; font-size:.88rem; background:var(--white); }
+  table.grid th, table.grid td { border:1px solid var(--rule); padding:0; text-align:left; }
+  table.grid th { background:#EEF1EE; padding:6px 8px; font-weight:700; white-space:nowrap; }
+  table.grid td input { border:0; width:100%; padding:6px 8px; font:inherit; background:transparent; min-width:70px; }
+  table.grid td.x { width:32px; text-align:center; }
+  table.grid td input[data-c="study_id"] { min-width:190px; }
+  table.grid td input[data-c="year"] { min-width:64px; }
+  [role=tab][aria-selected="true"] { background:var(--ink); color:var(--paper); }
+  .tablewrap { overflow-x:auto; margin-top:10px; }
+  .msg { padding:10px 14px; margin-top:12px; font-size:.9rem; border-left:3px solid var(--rule); background:var(--white); }
+  .msg.err { border-color:var(--caught); background:var(--caught-bg); }
+  .msg.ok { border-color:var(--ok); background:var(--ok-bg); }
+  .study { background:var(--white); border:1px solid var(--rule); margin-top:10px; }
+  .study > .head { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:10px 14px; flex-wrap:wrap; }
+  .study .name { font-weight:700; }
+  .badge { font-size:.8rem; padding:2px 8px; border:1px solid var(--rule); border-radius:10px; white-space:nowrap; }
+  .badge.ok { background:var(--ok-bg); border-color:var(--ok); color:var(--ok); }
+  .badge.err { background:var(--caught-bg); border-color:var(--caught); color:#7a4f10; }
+  .study .body { border-top:1px solid var(--rule); padding:12px 14px; font-size:.88rem; }
+  .study .body ul { margin:6px 0; padding-left:20px; }
+  .diff { display:grid; grid-template-columns: 1.1fr 1fr 1fr; gap:0; border:1px solid var(--rule); margin-top:8px; }
+  .diff > div { padding:8px 10px; border-bottom:1px solid var(--rule); }
+  .diff q { color:var(--soft); font-size:.82rem; display:block; }
+  .fig { background:var(--white); border:1px solid var(--rule); margin-top:14px; }
+  .fig img { width:100%; display:block; }
+  .fig figcaption { padding:8px 12px; font-size:.85rem; color:var(--soft); }
+  .summary { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:18px; margin-top:10px; }
+  .summary .n { font-size:1.6rem; font-weight:700; color:var(--plot); line-height:1.1; }
+  .summary .l { font-size:.85rem; color:var(--soft); }
+  .report { background:var(--white); border:1px solid var(--rule); padding:10px 28px 28px; margin-top:16px; }
+  .report img { max-width:100%; }
+  .report table { border-collapse:collapse; font-size:.88rem; }
+  .report th, .report td { border:1px solid var(--rule); padding:4px 8px; }
+  .hidden { display:none !important; }
+  details summary { cursor:pointer; }
+  progress { width:100%; height:8px; }
+  @media (max-width: 800px) { .shell { grid-template-columns:1fr; } nav.steps { border-right:0; border-bottom:1px solid var(--rule); padding:8px 0; }
+    nav.steps ol { display:flex; overflow-x:auto; } nav.steps ol button { white-space:nowrap; padding:8px 14px; } nav.steps .aside { display:none; }
+    main { padding:20px 16px 60px; } .diff { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <span class="brand"><a href="../">metakit</a> app</span>
+  <span id="engine" role="status">Loading the statistics engine (first visit about 20 s)...</span>
+</header>
+<div class="shell">
+  <nav class="steps" aria-label="Steps">
+    <ol>
+      <li><button data-step="setup" aria-current="step">Protocol</button></li>
+      <li><button data-step="data">Data</button></li>
+      <li><button data-step="review">Review</button></li>
+      <li><button data-step="rob">Risk of bias</button></li>
+      <li><button data-step="results">Results</button></li>
+    </ol>
+    <div class="aside">
+      <p style="margin:0 0 8px">Your project saves in this browser automatically.</p>
+      <button class="link" id="saveProject">Download project file</button><br>
+      <button class="link" id="loadProjectBtn">Open project file</button>
+      <input type="file" id="loadProject" accept=".json" class="hidden">
+      <p style="margin:12px 0 0"><button class="link" id="loadExample">Load the BCG example</button></p>
+      <p style="margin:6px 0 0"><button class="link" id="resetAll">Start over</button></p>
+    </div>
+  </nav>
+
+  <main>
+    <!-- 1. PROTOCOL -->
+    <section id="step-setup">
+      <h1>Protocol</h1>
+      <p class="lead">Decide what you will analyse before looking at any results. Pre-specifying outcomes and subgroups is what keeps a meta-analysis honest.</p>
+      <label for="p-title">Title</label>
+      <input type="text" id="p-title" placeholder="e.g. ST-segment changes in endurance athletes">
+      <label for="p-question">Research question <span class="hint">(population, exposure, comparator, outcome)</span></label>
+      <textarea id="p-question"></textarea>
+      <h2>Outcomes</h2>
+      <div id="outcomes"></div>
+      <div class="actions"><button class="btn" id="addOutcome">Add another outcome</button></div>
+      <h2>Model</h2>
+      <div class="row">
+        <div><label for="p-method">Between-study variance estimator</label>
+          <select id="p-method"><option value="REML">REML (recommended)</option><option value="DL">DerSimonian-Laird</option>
+            <option value="PM">Paule-Mandel</option><option value="ML">Maximum likelihood</option><option value="HE">Hedges</option><option value="FE">Fixed effect only</option></select></div>
+        <div><label for="p-test">Confidence intervals</label>
+          <select id="p-test"><option value="knha">Knapp-Hartung (recommended)</option><option value="z">Normal (z), as metafor's default</option></select></div>
+      </div>
+      <div class="row">
+        <div><label for="p-subgroups">Subgroup variables <span class="hint">(comma-separated, e.g. sport)</span></label><input type="text" id="p-subgroups"></div>
+        <div><label for="p-metareg">Meta-regression variables <span class="hint">(numeric, e.g. mean_age)</span></label><input type="text" id="p-metareg"></div>
+      </div>
+      <details style="margin-top:16px"><summary>PRISMA counts from your systematic review (optional)</summary>
+        <div class="row" id="prisma"></div>
+      </details>
+      <div class="actions"><button class="btn primary" data-go="data">Next: add data</button></div>
+    </section>
+
+    <!-- 2. DATA -->
+    <section id="step-data" class="hidden">
+      <h1>Data</h1>
+      <p class="lead">Two ways in. Type numbers from papers into the table, or add the papers and let Claude extract every number with the exact sentence it came from. The validator checks both.</p>
+      <div class="actions" role="tablist">
+        <button class="btn" role="tab" id="tab-manual" aria-selected="true">Enter numbers</button>
+        <button class="btn" role="tab" id="tab-ai" aria-selected="false">Extract from papers with AI</button>
+      </div>
+
+      <div id="pane-manual">
+        <div id="manualTables"></div>
+      </div>
+
+      <div id="pane-ai" class="hidden">
+        <div class="panel">
+          <div class="row">
+            <div><label for="apiKey">Anthropic API key <span class="hint">(sent only to Anthropic, straight from your browser)</span></label>
+              <input type="password" id="apiKey" autocomplete="off" placeholder="sk-ant-..."></div>
+            <div><label for="model">Model</label>
+              <select id="model"><option value="claude-opus-5-5">Claude Opus 5.5 (most accurate)</option><option value="claude-sonnet-5-5">Claude Sonnet 5.5 (faster, cheaper)</option></select></div>
+          </div>
+          <label style="font-weight:400"><input type="checkbox" id="rememberKey"> Remember the key in this browser</label>
+          <label style="font-weight:400"><input type="checkbox" id="dual" checked> Dual extraction (two independent reads per paper, then compare; recommended)</label>
+        </div>
+        <h2>Add papers</h2>
+        <div class="row">
+          <div><label for="pmids">PubMed IDs or PMC IDs <span class="hint">(one per line; open-access papers only)</span></label>
+            <textarea id="pmids" placeholder="42623958&#10;PMC1234567"></textarea>
+            <div class="actions"><button class="btn" id="fetchPapers">Fetch full texts</button></div></div>
+          <div><label for="pdfs">PDFs <span class="hint">(text is read by pdf.js, not by the AI)</span></label>
+            <input type="file" id="pdfs" accept="application/pdf" multiple>
+            <label for="pasteName">Or paste a paper's text</label>
+            <input type="text" id="pasteName" placeholder="Study name, e.g. Smith 2019">
+            <textarea id="pasteText" placeholder="Paste the full text, including tables"></textarea>
+            <div class="actions"><button class="btn" id="addPasted">Add pasted text</button></div></div>
+        </div>
+        <div id="paperList"></div>
+        <div class="actions">
+          <button class="btn primary" id="extractAll">Extract all pending papers</button>
+          <span id="extractStatus" class="hint"></span>
+        </div>
+      </div>
+      <div class="actions"><button class="btn" data-go="setup">Back</button><button class="btn primary" data-go="review">Next: review</button></div>
+    </section>
+
+    <!-- 3. REVIEW -->
+    <section id="step-review" class="hidden">
+      <h1>Review</h1>
+      <p class="lead">Every number is checked: is it in its quote, is the quote in the paper, is it plausible? Fix every error before analysing. Where two AI reads disagree, you decide.</p>
+      <div class="actions"><button class="btn primary" id="runValidate">Validate everything</button></div>
+      <div id="validation"></div>
+      <div id="disagreements"></div>
+      <div class="actions"><button class="btn" data-go="data">Back</button><button class="btn primary" data-go="rob">Next: risk of bias</button></div>
+    </section>
+
+    <!-- 4. RISK OF BIAS -->
+    <section id="step-rob" class="hidden">
+      <h1>Risk of bias</h1>
+      <p class="lead">How could each study's design distort its results? Judge each domain; overall is at least as bad as the worst domain. Optional, but it feeds the sensitivity analysis and GRADE.</p>
+      <label for="robTool">Tool</label>
+      <select id="robTool" style="max-width:420px"><option value="none">Skip risk of bias</option><option value="RoB2">RoB 2 (randomised trials)</option>
+        <option value="ROBINS-I">ROBINS-I (non-randomised studies)</option><option value="QUIPS">QUIPS (prognostic factor studies)</option></select>
+      <div class="tablewrap" id="robTable"></div>
+      <div class="actions"><button class="btn" data-go="review">Back</button><button class="btn primary" data-go="results">Next: results</button></div>
+    </section>
+
+    <!-- 5. RESULTS -->
+    <section id="step-results" class="hidden">
+      <h1>Results</h1>
+      <p class="lead">Computed by metakit, the same code as the command-line tool, validated against R's metafor. Nothing here is written by the AI.</p>
+      <div class="actions"><button class="btn primary" id="runAnalysis">Run the meta-analysis</button>
+        <label style="font-weight:400;margin:0"><input type="checkbox" id="force"> Analyse despite validation errors (not recommended)</label></div>
+      <div id="results"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+"use strict";
+// ---------------------------------------------------------------- state
+const MEASURES = {
+  binary: [["RR","Risk ratio"],["OR","Odds ratio"],["RD","Risk difference"]],
+  continuous: [["MD","Mean difference"],["SMD","Standardised mean difference (Hedges' g)"],["ROM","Ratio of means"]],
+  single_group: [["MN","Mean (one group)"]],
+  proportion: [["PLO","Proportion (logit)"],["PR","Proportion (raw)"]],
+  correlation: [["ZCOR","Correlation (Fisher z)"],["COR","Correlation (raw)"]],
+  generic: [["GEN","Pre-computed effect with CI"]],
+};
+const DT_LABEL = { binary:"Events in two groups", continuous:"Means in two groups", single_group:"Mean in one group",
+  proportion:"Proportion in one group", correlation:"Correlation", generic:"Reported effect with CI (e.g. adjusted HR)" };
+const MANUAL_COLS = {
+  binary: ["events_t","n_t","events_c","n_c"],
+  continuous: ["n_t","mean_t","sd_t","se_t","median_t","q1_t","q3_t","n_c","mean_c","sd_c","se_c","median_c","q1_c","q3_c"],
+  single_group: ["n","mean","sd","se","ci_lower","ci_upper","median","q1","q3"],
+  proportion: ["events","n"], correlation: ["r","n"], generic: ["estimate","ci_lower","ci_upper","se","n"],
+};
+const COL_HINT = { events_t:"events (exposed)", n_t:"n (exposed)", events_c:"events (comparator)", n_c:"n (comparator)",
+  mean_t:"mean (exp.)", sd_t:"SD (exp.)", se_t:"SE (exp.)", median_t:"median (exp.)", q1_t:"Q1 (exp.)", q3_t:"Q3 (exp.)",
+  mean_c:"mean (comp.)", sd_c:"SD (comp.)", se_c:"SE (comp.)", median_c:"median (comp.)", q1_c:"Q1 (comp.)", q3_c:"Q3 (comp.)" };
+const ROB_DOMAINS = { "RoB2": ["D1","D2","D3","D4","D5"], "ROBINS-I": ["D1","D2","D3","D4","D5","D6","D7"], "QUIPS": ["D1","D2","D3","D4","D5","D6"] };
+const ROB_LEVELS = { "RoB2": ["low","some concerns","high"], "ROBINS-I": ["low","moderate","serious","critical"], "QUIPS": ["low","moderate","high"] };
+const PRISMA_KEYS = [["identified","Records identified"],["duplicates_removed","Duplicates removed"],["screened","Records screened"],
+  ["excluded_screening","Excluded at screening"],["fulltext_assessed","Full texts assessed"],["fulltext_excluded","Full texts excluded"]];
+
+const blank = () => ({
+  protocol: { title:"", question:"", outcomes:[newOutcome(true)], model:{method:"REML", test:"knha", level:95},
+              subgroups:[], meta_regression:[], risk_of_bias_tool:"none" },
+  prisma: {}, rows: {}, papers: [], rob: {}, choices: {},
+});
+function newOutcome(primary=false){ return { id: primary ? "primary_outcome" : "outcome_" + Math.random().toString(36).slice(2,6),
+  label:"", data_type:"binary", measure:"RR", unit:"", primary, favours:null, generic_scale:null }; }
+let S = load() || blank();
+let py = null, pyReady = false, lastResult = null;
+
+function load(){ try { return JSON.parse(localStorage.getItem("metakit-project")); } catch { return null; } }
+function save(){ try { localStorage.setItem("metakit-project", JSON.stringify(S)); } catch (e) { console.warn("autosave failed", e); } }
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// ---------------------------------------------------------------- python engine
+async function bootEngine(){
+  try {
+    const pyodide = await loadPyodide({ indexURL:"https://cdn.jsdelivr.net/pyodide/v314.0.7/full/" });
+    await pyodide.loadPackage(["numpy","scipy","matplotlib","pyyaml"]);
+    const zip = await (await fetch("metakit.zip", {cache:"no-cache"})).arrayBuffer();
+    pyodide.unpackArchive(zip, "zip", { extractDir: "/home/pyodide/pkg" });
+    pyodide.runPython("import sys, json; sys.path.insert(0, '/home/pyodide/pkg'); from metakit import web");
+    py = pyodide; pyReady = true;
+    const v = callPy("version");
+    $("#engine").textContent = `Engine ready: metakit ${v} running in your browser`;
+    $("#engine").classList.add("ready");
+  } catch (e) {
+    $("#engine").textContent = "Could not load the statistics engine: " + e.message + ". Check your connection and reload.";
+  }
+}
+function callPy(fn, ...args){
+  if (!pyReady) throw new Error("The statistics engine is still loading. Try again in a few seconds.");
+  py.globals.set("_args", py.toPy(args));
+  try { return JSON.parse(py.runPython(`json.dumps(getattr(web, ${JSON.stringify(fn)})(*_args))`)); }
+  finally { py.globals.delete("_args"); }
+}
+const nextFrame = () => new Promise(r => setTimeout(r, 30));
+
+// ---------------------------------------------------------------- navigation
+function go(step){
+  document.querySelectorAll("main > section").forEach(s => s.classList.toggle("hidden", s.id !== "step-" + step));
+  document.querySelectorAll("nav.steps button").forEach(b => b.dataset.step === step ? b.setAttribute("aria-current", "step") : b.removeAttribute("aria-current"));
+  if (step === "data") renderData();
+  if (step === "rob") renderRob();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll("nav.steps button").forEach(b => b.onclick = () => go(b.dataset.step));
+document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { readProtocol(); go(b.dataset.go); });
+
+// ---------------------------------------------------------------- protocol
+function renderProtocol(){
+  const p = S.protocol;
+  $("#p-title").value = p.title || ""; $("#p-question").value = p.question || "";
+  $("#p-method").value = p.model.method; $("#p-test").value = p.model.test;
+  $("#p-subgroups").value = (p.subgroups||[]).join(", "); $("#p-metareg").value = (p.meta_regression||[]).join(", ");
+  $("#prisma").innerHTML = PRISMA_KEYS.map(([k,l]) => `<div><label for="pr-${k}">${l}</label><input type="number" min="0" id="pr-${k}" value="${esc(S.prisma[k] ?? "")}"></div>`).join("");
+  $("#outcomes").innerHTML = p.outcomes.map((o,i) => `
+    <div class="panel outcome" data-i="${i}">
+      <div class="row">
+        <div><label>Outcome name</label><input type="text" data-f="label" value="${esc(o.label)}" placeholder="e.g. ST elevation in V2"></div>
+        <div><label>Short id <span class="hint">(no spaces)</span></label><input type="text" data-f="id" value="${esc(o.id)}"></div>
+      </div>
+      <div class="row">
+        <div><label>What the papers report</label><select data-f="data_type">${Object.keys(MEASURES).map(d => `<option value="${d}" ${d===o.data_type?"selected":""}>${DT_LABEL[d]}</option>`).join("")}</select></div>
+        <div><label>Effect measure</label><select data-f="measure">${MEASURES[o.data_type].map(([m,l]) => `<option value="${m}" ${m===o.measure?"selected":""}>${l}</option>`).join("")}</select></div>
+        <div class="${["continuous","single_group"].includes(o.data_type)?"":"hidden"}"><label>Common unit <span class="hint">(e.g. mV)</span></label><input type="text" data-f="unit" value="${esc(o.unit||"")}"></div>
+        <div class="${o.data_type==="generic"?"":"hidden"}"><label>Scale</label><select data-f="generic_scale"><option value="ratio" ${o.generic_scale==="ratio"?"selected":""}>Ratio (OR, RR, HR)</option><option value="difference" ${o.generic_scale==="difference"?"selected":""}>Difference</option></select></div>
+      </div>
+      <div class="actions">${i===0?'<span class="hint">Primary outcome</span>':`<button class="link" data-remove="${i}">Remove outcome</button>`}</div>
+    </div>`).join("");
+  $("#outcomes").querySelectorAll("[data-f]").forEach(el => el.onchange = () => {
+    const o = S.protocol.outcomes[+el.closest(".outcome").dataset.i]; const f = el.dataset.f;
+    o[f] = el.value;
+    if (f === "data_type") { o.measure = MEASURES[o.data_type][0][0]; if (o.data_type === "generic") o.generic_scale = "ratio"; renderProtocol(); }
+    if (f === "id") o.id = el.value.trim().replace(/\W+/g, "_");
+    save();
+  });
+  $("#outcomes").querySelectorAll("[data-remove]").forEach(b => b.onclick = () => { S.protocol.outcomes.splice(+b.dataset.remove,1); save(); renderProtocol(); });
+}
+function readProtocol(){
+  const p = S.protocol;
+  p.title = $("#p-title").value.trim(); p.question = $("#p-question").value.trim();
+  p.model.method = $("#p-method").value; p.model.test = $("#p-test").value;
+  const list = s => s.split(",").map(x => x.trim()).filter(Boolean);
+  p.subgroups = list($("#p-subgroups").value); p.meta_regression = list($("#p-metareg").value);
+  PRISMA_KEYS.forEach(([k]) => { const v = $("#pr-"+k)?.value; S.prisma[k] = v === "" || v == null ? null : +v; });
+  p.outcomes.forEach((o, i) => { o.primary = i === 0; if (!o.label) o.label = o.id; });
+  save();
+}
+$("#addOutcome").onclick = () => { readProtocol(); S.protocol.outcomes.push(newOutcome()); save(); renderProtocol(); };
+function protocolForPy(){
+  const p = JSON.parse(JSON.stringify(S.protocol));
+  p.outcomes.forEach(o => { if (!o.unit) delete o.unit; if (o.data_type !== "generic") delete o.generic_scale; delete o.favours; });
+  p.risk_of_bias_tool = S.protocol.risk_of_bias_tool || "none";
+  return p;
+}
+
+// ---------------------------------------------------------------- manual data
+function modCols(){ return [...new Set([...(S.protocol.subgroups||[]), ...(S.protocol.meta_regression||[])])]; }
+function renderData(){
+  const tabs = [$("#tab-manual"), $("#tab-ai")];
+  tabs.forEach(t => t.onclick = () => { tabs.forEach(x => x.setAttribute("aria-selected", x === t)); $("#pane-manual").classList.toggle("hidden", t.id !== "tab-manual"); $("#pane-ai").classList.toggle("hidden", t.id !== "tab-ai"); if (t.id==="tab-ai") renderPapers(); });
+  $("#manualTables").innerHTML = S.protocol.outcomes.map(o => {
+    const cols = ["study_id","year", ...MANUAL_COLS[o.data_type], ...modCols()];
+    const rows = S.rows[o.id] ||= [{}];
+    return `<div class="panel outcome"><h2 style="margin-top:0">${esc(o.label || o.id)} <span class="hint">(${esc(DT_LABEL[o.data_type])})</span></h2>
+      <p class="hint" style="margin:0">Fill what each paper reports: for means, an SD <i>or</i> an SE <i>or</i> a median with Q1/Q3 per group. The software converts them.</p>
+      <div class="tablewrap"><table class="grid" data-o="${esc(o.id)}" data-cols="${esc(cols.join(","))}"><thead><tr>${cols.map(c => `<th title="${esc(COL_HINT[c]||c)}">${esc(c==="study_id"?"Study":c==="year"?"Year":(COL_HINT[c]||c))}</th>`).join("")}<th></th></tr></thead>
+      <tbody>${rows.map((r,ri) => `<tr>${cols.map(c => `<td><input aria-label="${esc(c)} row ${ri+1}" data-c="${c}" data-r="${ri}" value="${esc(r[c] ?? "")}"></td>`).join("")}<td class="x"><button class="link" data-del="${ri}" aria-label="Delete row">×</button></td></tr>`).join("")}</tbody></table></div>
+      <div class="actions"><button class="btn" data-add="${esc(o.id)}">Add study</button><span class="hint">Tip: paste a block of cells copied from Excel into the first cell.</span></div></div>`;
+  }).join("");
+  $("#manualTables").querySelectorAll("table.grid").forEach(tb => {
+    const oid = tb.dataset.o;
+    tb.querySelectorAll("input").forEach(inp => {
+      inp.oninput = () => { S.rows[oid][+inp.dataset.r][inp.dataset.c] = inp.value; save(); };
+      inp.onpaste = e => {
+        const text = e.clipboardData.getData("text"); if (!text.includes("\t") && !text.includes("\n")) return;
+        e.preventDefault();
+        const cols = tb.dataset.cols.split(",");
+        const c0 = cols.indexOf(inp.dataset.c), r0 = +inp.dataset.r;
+        text.trim().split(/\r?\n/).forEach((line, dr) => { const row = S.rows[oid][r0+dr] ||= {}; line.split("\t").forEach((v, dc) => { if (cols[c0+dc]) row[cols[c0+dc]] = v.trim(); }); });
+        save(); renderData();
+      };
+    });
+    tb.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { S.rows[oid].splice(+b.dataset.del,1); if (!S.rows[oid].length) S.rows[oid].push({}); save(); renderData(); });
+  });
+  $("#manualTables").querySelectorAll("[data-add]").forEach(b => b.onclick = () => { S.rows[b.dataset.add].push({}); save(); renderData(); });
+}
+
+// ---------------------------------------------------------------- AI extraction
+function renderPapers(){
+  const k = localStorage.getItem("metakit-key"); if (k && !$("#apiKey").value) { $("#apiKey").value = k; $("#rememberKey").checked = true; }
+  $("#paperList").innerHTML = S.papers.length ? S.papers.map((p,i) => `
+    <div class="study"><div class="head"><span><span class="name">${esc(p.study_id)}</span> <span class="hint">${esc(p.origin)}, ${(p.text.length/1000).toFixed(0)}k characters</span></span>
+      <span>${statusBadge(p)} <button class="link" data-rm="${i}">Remove</button></span></div>
+      ${p.log?.length ? `<div class="body"><ul>${p.log.map(l => `<li>${esc(l)}</li>`).join("")}</ul></div>` : ""}</div>`).join("")
+    : `<div class="msg">No papers yet. Fetch open-access papers by ID, upload PDFs, or paste text.</div>`;
+  $("#paperList").querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { S.papers.splice(+b.dataset.rm,1); save(); renderPapers(); });
+}
+function statusBadge(p){
+  if (p.status === "done") return `<span class="badge ok">extracted${p.recB ? " twice" : ""}, validated</span>`;
+  if (p.status === "errors") return `<span class="badge err">extracted, needs review</span>`;
+  if (p.status === "working") return `<span class="badge">extracting...</span>`;
+  if (p.status === "failed") return `<span class="badge err">failed</span>`;
+  return `<span class="badge">pending</span>`;
+}
+function addPaper(study_id, text, origin){
+  let id = study_id.trim() || "Study " + (S.papers.length + 1), n = 2;
+  while (S.papers.some(p => p.study_id === id)) id = `${study_id} (${n++})`;
+  S.papers.push({ study_id:id, text, origin, status:"pending", log:[] }); save(); renderPapers();
+}
+$("#addPasted").onclick = () => { const t = $("#pasteText").value.trim(); if (t.length < 200) return alert("Paste the full text (at least a few paragraphs, including the results tables)."); addPaper($("#pasteName").value, t, "pasted"); $("#pasteText").value = ""; $("#pasteName").value = ""; };
+$("#pdfs").onchange = async e => {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  for (const f of e.target.files) {
+    try {
+      const doc = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise; let text = "";
+      for (let i = 1; i <= doc.numPages; i++) {
+        const c = await (await doc.getPage(i)).getTextContent(); let lastY = null, line = [];
+        const lines = [];
+        for (const it of c.items) { const y = Math.round(it.transform[5]); if (lastY !== null && Math.abs(y - lastY) > 2) { lines.push(line.join(" ")); line = []; } line.push(it.str); lastY = y; }
+        lines.push(line.join(" ")); text += `<!-- page ${i} -->\n` + lines.join("\n") + "\n";
+      }
+      if (text.replace(/\s|<!--.*?-->/g, "").length < 200) { alert(`${f.name}: almost no text found. It is probably a scanned PDF; run OCR first.`); continue; }
+      addPaper(f.name.replace(/\.pdf$/i, ""), text, "PDF");
+    } catch (err) { alert(`${f.name}: ${err.message}`); }
+  }
+  e.target.value = "";
+};
+$("#fetchPapers").onclick = async () => {
+  const ids = $("#pmids").value.split(/\s+/).map(s => s.trim()).filter(Boolean);
+  if (!ids.length) return;
+  $("#fetchPapers").disabled = true;
+  for (const id of ids) {
+    try {
+      const q = /^PMC\d+$/i.test(id) ? `PMCID:${id.toUpperCase()}` : `EXT_ID:${id} AND SRC:MED`;
+      const r = await (await fetch(`https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${encodeURIComponent(q)}&format=json&resultType=core`)).json();
+      const hit = r.resultList?.result?.[0]; if (!hit) { alert(`${id}: not found in Europe PMC`); continue; }
+      const author = (hit.authorList?.author?.[0]?.lastName) || (hit.authorString||"").split(" ")[0] || id;
+      const name = `${author} ${hit.pubYear || ""}`.trim();
+      if (!hit.pmcid || hit.isOpenAccess !== "Y") { alert(`${name} (${id}) is not open access. Download the PDF through your library and upload it instead.`); continue; }
+      const xml = await (await fetch(`https://www.ebi.ac.uk/europepmc/webservices/rest/${hit.pmcid}/fullTextXML`)).text();
+      addPaper(name, callPy("jats", xml), `Europe PMC ${hit.pmcid}`);
+    } catch (err) { alert(`${id}: ${err.message}`); }
+  }
+  $("#fetchPapers").disabled = false; $("#pmids").value = "";
+};
+
+async function claude(messages){
+  const key = $("#apiKey").value.trim(); if (!key) throw new Error("Add your Anthropic API key first.");
+  const res = await fetch("https://api.anthropic.com/v1/messages", { method:"POST",
+    headers: { "content-type":"application/json", "x-api-key": key, "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" },
+    body: JSON.stringify({ model: $("#model").value, max_tokens: 8000, system: SYSTEM_PROMPT, messages }) });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || `API error ${res.status}`);
+  return data.content.filter(b => b.type === "text").map(b => b.text).join("");
+}
+function parseJSON(t){ const s = t.replace(/```(json)?/g, "").trim(); const a = s.indexOf("{"), b = s.lastIndexOf("}"); return JSON.parse(s.slice(a, b + 1)); }
+let SYSTEM_PROMPT = "";
+async function extractOnce(p, label){
+  const proto = JSON.stringify(protocolForPy());
+  const messages = [{ role:"user", content: callPy("extraction_user_prompt", proto, p.study_id, p.text.slice(0, 600000)) }];
+  for (let round = 0; round < 3; round++) {
+    const reply = await claude(messages); let rec;
+    try { rec = parseJSON(reply); } catch { messages.push({role:"assistant", content:reply}, {role:"user", content:"That was not valid JSON. Return only the JSON object."}); continue; }
+    rec.study_id = p.study_id; rec.extracted_by = `${$("#model").value} (${label})`;
+    const v = callPy("validate_one", proto, JSON.stringify(rec), p.text);
+    p.log.push(`Read ${label}, attempt ${round + 1}: ${v.errors.length} errors, ${v.n_quotes_verified}/${v.n_quotes_checked} quotes verified in the paper`);
+    renderPapers();
+    if (v.ok) return { rec, v };
+    if (round === 2) return { rec, v };
+    messages.push({ role:"assistant", content: reply }, { role:"user", content: callPy("fix_prompt", v.errors) });
+  }
+  throw new Error("could not get valid JSON");
+}
+$("#extractAll").onclick = async () => {
+  SYSTEM_PROMPT = SYSTEM_PROMPT || py.runPython("web.EXTRACTION_SYSTEM_PROMPT");
+  if ($("#rememberKey").checked) localStorage.setItem("metakit-key", $("#apiKey").value.trim()); else localStorage.removeItem("metakit-key");
+  readProtocol();
+  const todo = S.papers.filter(p => p.status !== "done");
+  $("#extractAll").disabled = true;
+  for (const [i, p] of todo.entries()) {
+    $("#extractStatus").textContent = `Paper ${i + 1} of ${todo.length}: ${p.study_id}`;
+    p.status = "working"; p.log = []; renderPapers();
+    try {
+      const dual = $("#dual").checked;
+      const [A, B] = await Promise.all([extractOnce(p, "A"), dual ? extractOnce(p, "B") : Promise.resolve(null)]);
+      p.recA = A.rec; p.recB = B?.rec || null; p.valA = A.v;
+      if (p.recB) { const r = callPy("reconcile", JSON.stringify([p.recA]), JSON.stringify([p.recB])); p.diffs = r.discrepancies; p.agreement = r.agreement;
+        p.log.push(`Reads A and B agree on ${(100*r.agreement).toFixed(0)}% of fields; ${r.discrepancies.length} to decide on the Review step`); }
+      p.status = A.v.ok && (!B || B.v.ok) ? "done" : "errors";
+    } catch (err) { p.status = "failed"; p.log.push(err.message); }
+    save(); renderPapers();
+  }
+  $("#extractStatus").textContent = "Done. Check the Review step."; $("#extractAll").disabled = false;
+};
+
+// ---------------------------------------------------------------- building the record set
+function sourceName(p){ return "fulltext/" + p.study_id.replace(/\W+/g, "_") + ".md"; }
+function finalRecords(){
+  const recs = [];
+  S.protocol.outcomes.forEach(o => {
+    const rows = (S.rows[o.id] || []).filter(r => r.study_id);
+    if (rows.length) recs.push(...callPy("rows_to_records", rows, o, "reviewer"));
+  });
+  S.papers.filter(p => p.recA).forEach(p => {
+    const rec = JSON.parse(JSON.stringify(p.recA)); rec.source_file = sourceName(p);
+    (p.diffs || []).forEach((d, i) => {
+      if ((S.choices[p.study_id] || {})[i] !== "b" || !p.recB) return;
+      const ob = p.recB.outcomes?.find(x => x.outcome === d.outcome), oa = rec.outcomes?.find(x => x.outcome === d.outcome);
+      if (d.outcome === "_moderators") { rec.moderators ||= {}; if (d.field in (p.recB.moderators||{})) rec.moderators[d.field] = p.recB.moderators[d.field]; else delete rec.moderators[d.field]; }
+      else if (d.field === "*" && ob) rec.outcomes.push(ob);
+      else if (ob && oa) { if (ob.fields?.[d.field]) oa.fields[d.field] = ob.fields[d.field]; else delete oa.fields[d.field]; }
+    });
+    recs.push(rec);
+  });
+  return recs;
+}
+function sources(){ const s = {}; S.papers.filter(p => p.recA).forEach(p => s[sourceName(p)] = p.text); return s; }
+
+// ---------------------------------------------------------------- review
+$("#runValidate").onclick = async () => {
+  readProtocol(); $("#validation").innerHTML = `<div class="msg">Checking every number...</div>`; await nextFrame();
+  try {
+    const recs = finalRecords(); if (!recs.length) { $("#validation").innerHTML = `<div class="msg err">No data yet. Add studies on the Data step.</div>`; return; }
+    const v = callPy("validate", JSON.stringify(protocolForPy()), JSON.stringify(recs), JSON.stringify(sources()));
+    const manualWarn = v.warnings.filter(w => w.where === "source_file").length;
+    const warns = v.warnings.filter(w => w.where !== "source_file");
+    $("#validation").innerHTML = `<div class="msg ${v.ok ? "ok" : "err"}"><b>${v.ok ? "No errors." : v.errors.length + " error" + (v.errors.length>1?"s":"") + " to fix."}</b>
+      ${v.n_values} numbers checked${v.n_quotes_checked ? `; ${v.n_quotes_verified} of ${v.n_quotes_checked} quotes verified in the papers` : ""}${manualWarn ? `; ${manualWarn} studies entered by hand (no paper text to check against)` : ""}.</div>
+      ${v.errors.length ? `<div class="panel"><h2 style="margin-top:0">Errors</h2><ul>${v.errors.map(e => `<li><b>${esc(e.study)}</b> (${esc(e.where)}): ${esc(e.message)}</li>`).join("")}</ul></div>` : ""}
+      ${warns.length ? `<div class="panel"><h2 style="margin-top:0">Worth a look</h2><ul>${warns.map(e => `<li><b>${esc(e.study)}</b> (${esc(e.where)}): ${esc(e.message)}</li>`).join("")}</ul></div>` : ""}`;
+  } catch (e) { $("#validation").innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
+  renderDisagreements();
+};
+function fieldView(rec, d){
+  if (!rec) return "missing";
+  if (d.outcome === "_moderators") { const m = rec.moderators?.[d.field]; return m ? `${esc(m.value)}<q>${esc(m.quote)}</q>` : "not reported"; }
+  const o = rec.outcomes?.find(x => x.outcome === d.outcome); if (!o) return "outcome not extracted";
+  if (d.field === "*") return "outcome extracted"; const f = o.fields?.[d.field];
+  return f ? `<b>${esc(f.value)}</b><q>${esc(f.quote)}</q><span class="hint">${esc(f.location||"")}</span>` : "not reported";
+}
+function renderDisagreements(){
+  const withDiffs = S.papers.filter(p => p.diffs?.length);
+  if (!withDiffs.length) { $("#disagreements").innerHTML = ""; return; }
+  $("#disagreements").innerHTML = `<h2>Where the two AI reads disagree</h2><p class="hint">Open the paper if needed and pick the value it supports. Read A is used unless you choose B.</p>` +
+    withDiffs.map(p => `<div class="panel"><b>${esc(p.study_id)}</b> <span class="hint">(agreement ${(100*p.agreement).toFixed(0)}%)</span>
+      ${p.diffs.map((d,i) => { const ch = (S.choices[p.study_id]||{})[i] || "a"; return `<div class="diff">
+        <div>${esc(d.outcome === "_moderators" ? "moderator" : d.outcome)}: <b>${esc(d.field)}</b></div>
+        <div><label style="font-weight:400;margin:0"><input type="radio" name="d-${esc(p.study_id)}-${i}" value="a" ${ch==="a"?"checked":""}> Read A</label>${fieldView(p.recA, d)}</div>
+        <div><label style="font-weight:400;margin:0"><input type="radio" name="d-${esc(p.study_id)}-${i}" value="b" ${ch==="b"?"checked":""}> Read B</label>${fieldView(p.recB, d)}</div></div>`; }).join("")}
+      <details style="margin-top:10px"><summary>Show the paper's text</summary><pre style="white-space:pre-wrap;font-size:.8rem;max-height:420px;overflow:auto">${esc(p.text)}</pre></details></div>`).join("");
+  $("#disagreements").querySelectorAll("input[type=radio]").forEach(r => r.onchange = () => {
+    const [, sid, i] = r.name.match(/^d-(.*)-(\d+)$/); (S.choices[sid] ||= {})[i] = r.value; save();
+  });
+}
+
+// ---------------------------------------------------------------- risk of bias
+function studyIds(){ try { return [...new Set(finalRecords().map(r => r.study_id))]; } catch { return []; } }
+function renderRob(){
+  const tool = S.protocol.risk_of_bias_tool || "none"; $("#robTool").value = tool;
+  $("#robTool").onchange = () => { S.protocol.risk_of_bias_tool = $("#robTool").value; save(); renderRob(); };
+  if (tool === "none") { $("#robTable").innerHTML = ""; return; }
+  const doms = ROB_DOMAINS[tool], levels = ROB_LEVELS[tool], ids = studyIds();
+  const sel = (sid, d, v) => `<select data-s="${esc(sid)}" data-d="${d}" aria-label="${esc(sid)} ${d}"><option value=""></option>${levels.map(l => `<option ${l===v?"selected":""}>${l}</option>`).join("")}</select>`;
+  $("#robTable").innerHTML = ids.length ? `<table class="grid" style="margin-top:14px"><thead><tr><th>Study</th>${doms.map(d => `<th>${d}</th>`).join("")}<th>Overall</th><th>Notes</th></tr></thead><tbody>
+    ${ids.map(sid => { const r = S.rob[sid] || {}; return `<tr><td style="padding:6px 8px">${esc(sid)}</td>${doms.map(d => `<td>${sel(sid, d, r[d])}</td>`).join("")}<td>${sel(sid, "overall", r.overall)}</td>
+      <td><input data-s="${esc(sid)}" data-d="notes" value="${esc(r.notes||"")}" placeholder="reason / quote"></td></tr>`; }).join("")}</tbody></table>
+    <p class="hint">Domains: ${tool === "RoB2" ? "D1 randomisation, D2 deviations from intended interventions, D3 missing outcome data, D4 outcome measurement, D5 selective reporting" : tool === "ROBINS-I" ? "D1 confounding, D2 participant selection, D3 intervention classification, D4 deviations, D5 missing data, D6 outcome measurement, D7 selective reporting" : "D1 participation, D2 attrition, D3 prognostic factor measurement, D4 outcome measurement, D5 confounding, D6 analysis and reporting"}.</p>`
+    : `<div class="msg">Add studies first.</div>`;
+  $("#robTable").querySelectorAll("[data-s]").forEach(el => el.onchange = () => { (S.rob[el.dataset.s] ||= {})[el.dataset.d] = el.value; save(); });
+}
+function robForPy(){
+  const tool = S.protocol.risk_of_bias_tool; if (!tool || tool === "none") return {};
+  const out = {};
+  for (const [sid, r] of Object.entries(S.rob)) {
+    if (!r.overall) continue;
+    out[sid] = { tool, overall: r.overall, domains: Object.fromEntries(ROB_DOMAINS[tool].map(d => [d, { judgement: r[d] || "low", support: r.notes || "Judged by the reviewer in the metakit app" }])) };
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------- results
+const fmt = (v, d=2) => v == null ? "NA" : Number(v).toFixed(d);
+$("#runAnalysis").onclick = async () => {
+  readProtocol(); $("#results").innerHTML = `<div class="msg">Running every analysis... <progress></progress></div>`; await nextFrame();
+  try {
+    const recs = finalRecords(); if (!recs.length) throw new Error("No data yet. Add studies on the Data step.");
+    const out = callPy("analyze", JSON.stringify(protocolForPy()), JSON.stringify(recs), JSON.stringify(sources()),
+      JSON.stringify(robForPy()), JSON.stringify(S.prisma), $("#force").checked);
+    lastResult = out;
+    if (!out.results) { $("#results").innerHTML = `<div class="msg err"><b>Validation found ${out.validation.errors.length} error(s).</b> Fix them on the Review step first.</div><ul>${out.validation.errors.slice(0,20).map(e => `<li><b>${esc(e.study)}</b> (${esc(e.where)}): ${esc(e.message)}</li>`).join("")}</ul>`; return; }
+    const img = k => out.figures[k] ? `data:image/png;base64,${out.figures[k]}` : "";
+    let html = `<div class="actions"><button class="btn primary" id="dlZip">Download everything (.zip)</button><button class="btn" id="dlReport">Download report (.md)</button></div>`;
+    for (const o of Object.values(out.results.outcomes)) {
+      html += `<div class="panel"><h2 style="margin-top:0">${esc(o.label)}</h2>`;
+      if (!o.main) { html += `<p>${esc((o.warnings||[]).join(" "))}</p></div>`; continue; }
+      const d = o.main.display, unit = o.unit && ["MD","MN"].includes(o.measure) ? " " + o.unit : "";
+      html += `<div class="summary">
+        <div><div class="n">${fmt(d.estimate)}${esc(unit)}</div><div class="l">${esc(o.measure_name)}, 95% CI ${fmt(d.ci_lb)} to ${fmt(d.ci_ub)}</div></div>
+        <div><div class="n">${o.k}</div><div class="l">studies${o.n_total ? `, ${o.n_total.toLocaleString()} participants` : ""}</div></div>
+        <div><div class="n">${fmt(o.main.I2,0)}%</div><div class="l">I²: share of variation from real differences between studies</div></div>
+        <div><div class="n">${d.pi_lb != null ? fmt(d.pi_lb) + " to " + fmt(d.pi_ub) : "NA"}</div><div class="l">95% prediction interval: expected range in a new setting</div></div>
+        <div><div class="n" style="text-transform:capitalize">${esc(o.grade.rating)}</div><div class="l">GRADE certainty (suggested; confirm each reason in the report)</div></div></div>
+        ${(o.warnings||[]).map(w => `<div class="msg">${esc(w)}</div>`).join("")}
+        ${Object.entries(o.figures).map(([k, f]) => `<figure class="fig"><img src="${img(f)}" alt="${esc(k.replace(/_/g," "))} for ${esc(o.label)}"><figcaption>${esc(k.replace(/_/g," "))}</figcaption></figure>`).join("")}</div>`;
+    }
+    const rep = out.report_md.replace(/\]\(\.\.\/analysis\/([^)]+)\)/g, (_, p) => `](${img(p)})`);
+    html += `<h2>Draft report</h2><div class="report">${marked.parse(rep)}</div>`;
+    $("#results").innerHTML = html;
+    $("#dlZip").onclick = () => download("meta-analysis.zip", b64ToBlob(out.zip_b64, "application/zip"));
+    $("#dlReport").onclick = () => download("report.md", new Blob([out.report_md], {type:"text/markdown"}));
+  } catch (e) { $("#results").innerHTML = `<div class="msg err">${esc(e.message)}</div>`; console.error(e); }
+};
+function b64ToBlob(b64, type){ const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u[i] = bin.charCodeAt(i); return new Blob([u], {type}); }
+function download(name, blob){ const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
+
+// ---------------------------------------------------------------- project files and example
+$("#saveProject").onclick = () => { readProtocol(); download(`${(S.protocol.title || "meta-analysis").replace(/\W+/g,"-")}.metakit.json`, new Blob([JSON.stringify(S, null, 1)], {type:"application/json"})); };
+$("#loadProjectBtn").onclick = () => $("#loadProject").click();
+$("#loadProject").onchange = async e => { try { S = JSON.parse(await e.target.files[0].text()); save(); renderProtocol(); go("setup"); } catch (err) { alert("Not a metakit project file: " + err.message); } };
+$("#resetAll").onclick = () => { if (confirm("Clear this project from the browser? Download the project file first if you want to keep it.")) { S = blank(); save(); renderProtocol(); go("setup"); } };
+const BCG = [["Aronson",1948,4,119,11,128,44,"random"],["Ferguson & Simes",1949,6,300,29,274,55,"random"],["Rosenthal et al",1960,3,228,11,209,42,"random"],
+  ["Hart & Sutherland",1977,62,13536,248,12619,52,"random"],["Frimodt-Moller et al",1973,33,5036,47,5761,13,"alternate"],["Stein & Aronson",1953,180,1361,372,1079,44,"alternate"],
+  ["Vandiviere et al",1973,8,2537,10,619,19,"random"],["TPT Madras",1980,505,87886,499,87892,13,"random"],["Coetzee & Berjak",1968,29,7470,45,7232,27,"random"],
+  ["Rosenthal et al",1961,17,1699,65,1600,42,"systematic"],["Comstock et al",1974,186,50448,141,27197,18,"systematic"],["Comstock & Webster",1969,5,2493,3,2338,33,"systematic"],
+  ["Comstock et al",1976,27,16886,29,17825,33,"systematic"]];
+$("#loadExample").onclick = () => {
+  if (!confirm("Replace the current project with the BCG vaccine example (Colditz et al., JAMA 1994)?")) return;
+  S = blank();
+  Object.assign(S.protocol, { title:"BCG vaccine and tuberculosis (Colditz et al., JAMA 1994)", question:"Does BCG vaccination reduce the risk of tuberculosis compared with no vaccination?",
+    outcomes:[{ id:"tb_cases", label:"Tuberculosis cases", data_type:"binary", measure:"RR", unit:"", primary:true }],
+    model:{ method:"REML", test:"z", level:95 }, subgroups:["alloc"], meta_regression:["ablat"] });
+  S.rows.tb_cases = BCG.map(([a,y,tp,tn,cp,cn,ab,al]) => ({ study_id:`${a} ${y}`, year:y, events_t:tp, n_t:tp+tn, events_c:cp, n_c:cp+cn, ablat:ab, alloc:al }));
+  save(); renderProtocol(); go("setup");
+};
+
+renderProtocol();
+bootEngine();
+</script>
+</body>
+</html>

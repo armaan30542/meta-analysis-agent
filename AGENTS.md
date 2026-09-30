@@ -2,7 +2,13 @@
 
 Instructions for AI coding agents (Codex, Claude Code, others) working in this repository.
 
-## If you are asked to run a meta-analysis
+## If you are asked to run a systematic review or meta-analysis
+
+The skills in `skills/` are the playbooks. Start from `skills/systematic-review/SKILL.md` for the
+whole pipeline, or the stage skill you need. Team meetings and AI screening use `ANTHROPIC_API_KEY`.
+`skills/pubmed-search-builder/` is vendored from upstream: do not edit it (see its `UPSTREAM.md`).
+
+### The meta-analysis stage
 
 Follow `skills/meta-analysis/SKILL.md` step by step. It is written for Claude Code but works
 for any agent with two substitutions:
@@ -31,6 +37,9 @@ Non-negotiable, whichever agent you are:
 - `python -m metakit benchmark` must still print `ALL BENCHMARKS PASSED`.
 - Keep the validator strict. A change that makes `tests/test_extraction.py` pass by loosening a
   check is a regression.
+- After changing anything in `metakit/`, run `python scripts/build_web.py` to rebuild the web app's
+  bundle (`docs/app/metakit.zip`); `tests/test_web.py` fails if it is stale. Browser tests:
+  `pip install playwright && playwright install chromium && METAKIT_BROWSER_TESTS=1 pytest tests/test_app_e2e.py`.
 - Do not add dependencies beyond `requirements.txt` without a strong reason; the tool must
   install in about a minute on a student laptop.
 
@@ -51,10 +60,13 @@ metakit/            Python package (the CLI is metakit/cli.py)
   ingest.py         reads the systematic review's included-studies list
   reconcile.py      dual-extraction comparison
   rob.py, grade.py  risk of bias, GRADE suggestions
+  team.py           virtual review team (Virtual Lab protocol, ported to Claude)
+  screening.py      search execution, deduplication, dual screening, kappa, PRISMA
   plots.py          figures
 skills/, agents/    Claude Code plugin (skill + extractor subagent)
 r/                  metafor reference generator and cross-check
 benchmarks/         published meta-analyses reproduced end to end
 tests/              pytest suite
 docs/               plain-language and technical docs, GitHub Pages site
+  app/              the browser app (runs metakit via Pyodide); metakit.zip is built by scripts/build_web.py
 ```

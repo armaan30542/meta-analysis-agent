@@ -1,8 +1,21 @@
 {
   "name": "metakit",
-  "version": "1.0.0",
-  "description": "Run a full, auditable meta-analysis from a systematic review's included studies: full-text retrieval, dual blind extraction with provenance checks, metafor-validated statistics, GRADE, and a manuscript-ready report.",
-  "author": { "name": "Armaan Punjani and Ramcharan Nagisetty" },
+  "version": "1.1.0",
+  "description": "Evidence-synthesis skill library: a virtual review team (Virtual Lab protocol), high-sensitivity PubMed search (pubmed-search-builder), dual screening, dual blind extraction with provenance checks, metafor-validated meta-analysis, GRADE and reporting.",
+  "author": {
+    "name": "Armaan Punjani and Ramcharan Nagisetty"
+  },
   "license": "MIT",
-  "keywords": ["meta-analysis", "systematic review", "research", "statistics", "evidence synthesis", "PRISMA"]
+  "keywords": [
+    "meta-analysis",
+    "systematic review",
+    "research",
+    "statistics",
+    "evidence synthesis",
+    "PRISMA",
+    "pubmed",
+    "screening",
+    "virtual lab",
+    "PRISMA-S"
+  ]
 }

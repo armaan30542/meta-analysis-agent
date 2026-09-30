@@ -39,3 +39,15 @@ jobs:
         run: |
           cp -r benchmarks/bcg /tmp/bcg
           python -m metakit run -p /tmp/bcg
+
+  web-app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt pytest playwright
+      - run: playwright install --with-deps chromium
+      - name: Browser end-to-end tests (Pyodide + mocked Claude API)
+        run: METAKIT_BROWSER_TESTS=1 pytest -q tests/test_app_e2e.py

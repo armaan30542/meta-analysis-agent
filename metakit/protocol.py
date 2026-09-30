@@ -43,6 +43,12 @@ pico:
 
 study_designs: ["RCT"]        # RCT, cohort, case-control, cross-sectional ...
 
+eligibility:                  # used by title/abstract and full-text screening
+  include:
+    - "..."
+  exclude:
+    - "..."
+
 outcomes:
   - id: primary_outcome       # short id used in every extraction file
     label: "Readable outcome name"
