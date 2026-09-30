@@ -46,8 +46,8 @@ statistics with references are in [docs/methods.md](docs/methods.md).
 ## Publish this repo (first time only)
 
 ```bash
-./scripts/set-owner.sh YOUR-GITHUB-USERNAME   # fills in the GitHub owner everywhere
-git remote add origin https://github.com/YOUR-GITHUB-USERNAME/meta-analysis-agent.git
+./scripts/set-owner.sh armaan30542   # fills in the GitHub owner everywhere
+git remote add origin https://github.com/armaan30542/meta-analysis-agent.git
 git push -u origin main
 ```
 
@@ -60,12 +60,12 @@ every push.
 ### As a Claude Code plugin (recommended)
 
 ```bash
-claude plugin marketplace add YOUR-GITHUB-USERNAME/meta-analysis-agent
+claude plugin marketplace add armaan30542/meta-analysis-agent
 claude plugin install metakit@metakit
 ```
 
 Then in any Claude Code session: `/metakit:meta-analysis` (or just ask Claude to run a
-meta-analysis). Replace `YOUR-GITHUB-USERNAME` with the account that hosts this repo.
+meta-analysis). Replace `armaan30542` with the account that hosts this repo.
 
 ### With Codex or another agent
 
@@ -74,7 +74,7 @@ Clone the repo and point the agent at [AGENTS.md](AGENTS.md).
 ### As a plain command-line tool
 
 ```bash
-git clone https://github.com/YOUR-GITHUB-USERNAME/meta-analysis-agent
+git clone https://github.com/armaan30542/meta-analysis-agent
 cd meta-analysis-agent
 ./bin/metakit --version        # first run creates a private Python environment
 ./bin/metakit benchmark        # reproduce the published benchmarks
